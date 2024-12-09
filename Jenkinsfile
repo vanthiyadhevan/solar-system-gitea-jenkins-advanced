@@ -4,12 +4,9 @@ pipeline {
 		nodejs 'nodejs'
 	}
 	stages {
-		stage("vm node version") {
+		stage("Installing Dependencies") {
 			steps {
-				sh """
-					node -v
-					npm -v
-				"""
+				sh 'npm install --no-audit'
 			}
 		}
 	}
