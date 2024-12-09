@@ -1,7 +1,7 @@
 pipeline {
 	agent any
 	tools {
-		nodejs nodejs
+		nodejs 'nodejs'
 	}
 	stages {
 		stage("vm node version") {
