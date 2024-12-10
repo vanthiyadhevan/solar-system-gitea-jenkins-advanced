@@ -29,10 +29,10 @@ pipeline {
 
 						publishHTML([allowMissing: true,
 						alwaysLinkToLastBuild: true, keepAll: true,
-						reportDir: './', reportFiles: 'index.html',
+						reportDir: './',
+						reportFiles: 'dependency-check-junit.html',
 						reportName: 'dependency-check-HTML Report',
-						reportTitles: 'dependency-check-jenkins.html',
-						useWrapperFileDirectly: true]) 
+						reportTitles: '', useWrapperFileDirectly: true]) 
 
 						junit allowEmptyResults: true, keepProperties: true, stdioRetention: '', testResults: 'dependency-check-junit.xml'
 					}
