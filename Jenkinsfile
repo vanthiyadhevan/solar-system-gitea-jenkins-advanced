@@ -3,7 +3,7 @@ pipeline {
 	tools {
 		nodejs 'nodejs'
 	}
-	env {
+	environment {
 		// Test code 
 	}
 	stages {
