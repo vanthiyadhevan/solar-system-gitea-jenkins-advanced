@@ -3,6 +3,9 @@ pipeline {
 	tools {
 		nodejs 'nodejs'
 	}
+	env {
+		// Test code 
+	}
 	stages {
 		stage("Installing Dependencies") {
 			steps {
@@ -24,7 +27,7 @@ pipeline {
 							--format ALL
 							--prettyPrint
 						''', odcInstallation: 'OWASP-DepCheck-10'
-						
+
 						dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
 					}
 
