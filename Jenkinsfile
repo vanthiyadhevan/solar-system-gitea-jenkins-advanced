@@ -33,6 +33,8 @@ pipeline {
 						reportName: 'dependency-check-HTML Report',
 						reportTitles: 'dependency-check-jenkins.html',
 						useWrapperFileDirectly: true]) 
+
+						junit allowEmptyResults: true, keepProperties: true, stdioRetention: '', testResults: 'dependency-check-junit.xml'
 					}
 
 				}
