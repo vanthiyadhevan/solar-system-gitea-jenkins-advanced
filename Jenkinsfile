@@ -3,9 +3,6 @@ pipeline {
 	tools {
 		nodejs 'nodejs'
 	}
-	environment {
-		// Test code 
-	}
 	stages {
 		stage("Installing Dependencies") {
 			steps {
