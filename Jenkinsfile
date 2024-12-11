@@ -3,6 +3,11 @@ pipeline {
 	tools {
 		nodejs 'nodejs'
 	}
+	environment {
+  		MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
+  		MONGO_USERNAME = credentials('mongo-db-creds')
+  		MONGO_PASSWORD = credentials('mongo-db-creds')
+	}
 	stages {
 		stage("Installing Dependencies") {
 			steps {
@@ -34,14 +39,21 @@ pipeline {
 						reportName: 'dependency-check-HTML Report',
 						reportTitles: '', useWrapperFileDirectly: true])
 
-						junit allowEmptyResults: true, keepProperties: true, stdioRetention: '', testResults: 'dependency-check-junit.xml'
+						junit allowEmptyResults: true, stdioRetention: '', testResults: 'dependency-check-junit.xml'
+
 					}
 				}
 			}
 		}
 		stage("Unit Testing") {
 					steps {
-						sh 'npm test'
+						withCredentials([usernamePassword(credentialsId: 'mongo-db-creds', passwordVariable: 'MONGO_PASSWORD', usernameVariable: 'MONGO_USERNAME')]) {
+    						// some block
+    						sh 'npm test'
+						}
+
+						junit allowEmptyResults: true, stdioRetention: '', testResults: 'test-results.xml'
+						
 					}
 				}
 	}
