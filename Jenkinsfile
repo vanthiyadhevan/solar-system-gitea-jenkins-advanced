@@ -7,6 +7,7 @@ pipeline {
   		MONGO_URI = "mongodb+srv://supercluster.d83jj.mongodb.net/superData"
   		MONGO_USERNAME = credentials('mongo-db-creds')
   		MONGO_PASSWORD = credentials('mongo-db-creds')
+  		SONAR_SCANNER_HOME = tool 'sonar-scanner-610';
 	}
 	stages {
 		stage("Installing Dependencies") {
@@ -68,6 +69,18 @@ pipeline {
 						reportFiles: 'index.html',
 						reportName: 'Code-Coverage-HTML Report',
 						reportTitles: '', useWrapperFileDirectly: true])
+			}
+		}
+		stage('SAST- SonarQube') {
+			steps {
+				sh 'echo $SONAR_SCANNER_HOME'
+				sh '''
+					$SONAR_SCANNER_HOME/bin/sonar-scanner \
+						  -Dsonar.projectKey=solar-system \
+						  -Dsonar.sources=app.js \
+						  -Dsonar.host.url=http://18.234.147.179:9000 \
+						  -Dsonar.login=sqp_87a16a347360bdde6dfd51e7497b47c427f6c7aa
+				'''
 			}
 		}
 	}
