@@ -77,8 +77,9 @@ pipeline {
 				sh '''
 					$SONAR_SCANNER_HOME/bin/sonar-scanner \
 						  -Dsonar.projectKey=solar-system \
-						  -Dsonar.sources=app.js \
+						  -Dsonar.sources=. \
 						  -Dsonar.host.url=http://18.234.147.179:9000 \
+						  -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
 						  -Dsonar.login=sqp_87a16a347360bdde6dfd51e7497b47c427f6c7aa
 				'''
 			}
