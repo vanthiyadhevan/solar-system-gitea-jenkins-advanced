@@ -78,9 +78,9 @@ pipeline {
 					$SONAR_SCANNER_HOME/bin/sonar-scanner \
 						  -Dsonar.projectKey=solar-system \
 						  -Dsonar.sources=. \
-						  -Dsonar.host.url=http://18.234.147.179:9000 \
+						  -Dsonar.host.url=http://54.242.57.42:9000 \
 						  -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
-						  -Dsonar.login=sqp_87a16a347360bdde6dfd51e7497b47c427f6c7aa
+						  -Dsonar.login=sqp_6803aa773bccf75f1bdc5f2f41525c521f4af182
 				'''
 			}
 		}
