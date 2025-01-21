@@ -13,7 +13,6 @@ pipeline {
 		stage("Installing Dependencies") {
 			steps {
 				sh 'npm install --no-audit'
-				sh 'npm audit fix --force'
 			}
 		}
 		stage("Dependency Scanning") {
@@ -21,6 +20,7 @@ pipeline {
 				stage("NPM Dependency Audit") {
 					steps {
 						sh 'npm audit --audit-level=critical'
+						sh 'npm audit fix --force'
 					}
 				}
 				stage("OWASP Dependency Check") {
