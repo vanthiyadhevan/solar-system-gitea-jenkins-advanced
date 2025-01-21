@@ -72,19 +72,24 @@ pipeline {
 						reportTitles: '', useWrapperFileDirectly: true])
 			}
 		}
-		stage('SAST- SonarQube') {
-			steps {
-				timeout(10) {
-					withSonarQubeEnv('sonar-scanner-server') {
-						sh '''
-						$SONAR_SCANNER_HOME/bin/sonar-scanner \
-							  -Dsonar.projectKey=solar-system \
-							  -Dsonar.sources=. \
-							  -Dsonar.javascript.lcov.reportPaths=/coverage/lcov.info 
-						'''
-					}
-					waitForQualityGate abortPipeline: true
-				}			
+		// stage('SAST- SonarQube') {
+		// 	steps {
+		// 		timeout(10) {
+		// 			withSonarQubeEnv('sonar-scanner-server') {
+		// 				sh '''
+		// 				$SONAR_SCANNER_HOME/bin/sonar-scanner \
+		// 					  -Dsonar.projectKey=solar-system \
+		// 					  -Dsonar.sources=. \
+		// 					  -Dsonar.javascript.lcov.reportPaths=/coverage/lcov.info 
+		// 				'''
+		// 			}
+		// 			waitForQualityGate abortPipeline: true
+		// 		}			
+		// 	}
+		// }
+		stage('Docker Build') {
+			script {
+				sh ''
 			}
 		}
 	}
