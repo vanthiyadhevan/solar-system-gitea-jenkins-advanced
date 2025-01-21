@@ -88,8 +88,11 @@ pipeline {
 		// 	}
 		// }
 		stage('Docker Build') {
-			script {
-				sh ''
+			steps {
+				script {
+					sh 'printenv'
+					// sh ''
+				}
 			}
 		}
 	}
