@@ -10,6 +10,10 @@ pipeline {
         MONGO_DB_CREDS = credentials('mongo-db-credentials')
         MONGO_USERNAME = credentials('mongo-db-username')
         MONGO_PASSWORD = credentials('mongo-db-password')
+        AWS_CRDS = credentials('aws_creds')
+        AWS_REGION = credentials('aws_region')
+        ECR_REPO_NAME = credentials('ecr_repo_name')
+        ECR_REPO_URI = credentials('ecr_repo_uri')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-610';
     }
 
@@ -30,10 +34,8 @@ pipeline {
             parallel {
                 stage('NPM Dependency Audit') {
                     steps {
-                        sh '''
-                            npm audit --audit-level=critical
-                            echo $?
-                        '''
+                        sh 'npm audit --audit-level=critical'
+                        sh 'npm audit fix --force'
                     }
                 }
 
@@ -88,23 +90,31 @@ pipeline {
             }
         } 
 
-        stage('Build Docker Image') {
+        // stage('Build Docker Image') {
+        //     steps {
+        //         sh  'printenv'
+        //         sh  'docker build -t vanthiyadevan/solar-system:$GIT_COMMIT .'
+        //     }
+        // }
+
+        stage('Build App image') {
             steps {
-                sh  'printenv'
-                sh  'docker build -t siddharth67/solar-system:$GIT_COMMIT .'
+                script {
+                    dockerImage = docker.build("${env.ECR_REPO_URI}:${BUILD_NUMBER}", ".") 
+                }
             }
         }
 
         stage('Trivy Vulnerability Scanner') {
             steps {
                 sh  ''' 
-                    trivy image siddharth67/solar-system:$GIT_COMMIT \
+                    trivy image $ECR_REPO_URI:$BUILD_NUMBER \
                         --severity LOW,MEDIUM,HIGH \
                         --exit-code 0 \
                         --quiet \
                         --format json -o trivy-image-MEDIUM-results.json
 
-                    trivy image siddharth67/solar-system:$GIT_COMMIT \
+                    trivy image $ECR_REPO_URI:$BUILD_NUMBER \
                         --severity CRITICAL \
                         --exit-code 1 \
                         --quiet \
@@ -136,11 +146,22 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withDockerRegistry(credentialsId: 'docker-hub-credentials', url: "") {
-                    sh  'docker push siddharth67/solar-system:$GIT_COMMIT'
+                script {
+                     docker.withRegistry("${env.ECR_REPO_URI}", "${env.AWS_CRDS}") {
+                        dockerImage.push("${BUILD_NUMBER}")
+                        dockerImage.push('latest')
+                    }
                 }
             }
         }
+
+        // stage('Push Docker Image') {
+        //     steps {
+        //         withDockerRegistry(credentialsId: 'docker-hub-credentials', url: "") {
+        //             sh  'docker push vanthiyadevan/solar-system:$GIT_COMMIT'
+        //         }
+        //     }
+        // }
 
         stage('K8S - Update Image Tag') {
             when {
