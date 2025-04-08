@@ -107,7 +107,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    sh "docker build -t ${ECR_REPO_NAME}:${BUILD_NUMBER} -f Dockerfile ."
+                    sh "docker build -t ${ECR_REPO_URI}:${BUILD_NUMBER} -f Dockerfile ."
                 }
             }
         }
