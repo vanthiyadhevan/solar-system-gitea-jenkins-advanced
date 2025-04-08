@@ -97,10 +97,17 @@ pipeline {
         //     }
         // }
 
-        stage('Build App image') {
+        // stage('Build App image') {
+        //     steps {
+        //         script {
+        //             dockerImage = docker.build("${env.ECR_REPO_URI}:${BUILD_NUMBER}", ".") 
+        //         }
+        //     }
+        // }
+        stage('Docker Build') {
             steps {
                 script {
-                    dockerImage = docker.build("${env.ECR_REPO_URI}:${BUILD_NUMBER}", ".") 
+                    sh "docker build -t ${ECR_REPO_NAME}:${BUILD_NUMBER} -f Dockerfile ."
                 }
             }
         }
@@ -144,10 +151,12 @@ pipeline {
             }
         } 
 
+
+
         stage('Push Docker Image') {
             steps {
                 script {
-                     docker.withRegistry("${env.ECR_REPO_URI}", "${env.AWS_CRDS}") {
+                     docker.withRegistry("${ECR_REPO_URI}", "${AWS_CRDS}") {
                         dockerImage.push("${BUILD_NUMBER}")
                         dockerImage.push('latest')
                     }
@@ -165,7 +174,7 @@ pipeline {
 
         stage('K8S - Update Image Tag') {
             when {
-                branch 'PR*'
+                branch 'staging'
             }
             steps {
                 sh 'git clone -b main http://64.227.187.25:5555/dasher-org/solar-system-gitops-argocd'
@@ -190,7 +199,7 @@ pipeline {
 
         stage('K8S - Raise PR') {
             when {
-                branch 'PR*'
+                branch 'staging'
             }
             steps {
                 sh """
@@ -215,7 +224,7 @@ pipeline {
 
         stage('App Deployed?') {
             when {
-                branch 'PR*'
+                branch 'staging'
             }
             steps {
                 timeout(time: 1, unit: 'DAYS') {
@@ -226,7 +235,7 @@ pipeline {
 
         stage('DAST - OWASP ZAP') {
             when {
-                branch 'PR*'
+                branch 'staging'
             }
             steps {
                 sh '''
@@ -246,7 +255,7 @@ pipeline {
 
         stage('Upload - AWS S3') {
             when {
-                branch 'PR*'
+                branch 'staging'
             }
             steps {
                 withAWS(credentials: 'aws-s3-ec2-lambda-creds', region: 'us-east-2') {
