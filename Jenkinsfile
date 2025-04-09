@@ -10,7 +10,7 @@ pipeline {
         MONGO_DB_CREDS = credentials('mongo-db-credentials')
         MONGO_USERNAME = credentials('mongo-db-username')
         MONGO_PASSWORD = credentials('mongo-db-password')
-        // AWS_CRDS = credentials('aws_creds')
+        AWS_CRDS = credentials('aws_creds')
         AWS_REGION = credentials('aws_region')
         ECR_REPO_NAME = credentials('ecr_repo_name')
         ECR_REPO_URI = credentials('ecr_repo_uri')
@@ -155,7 +155,7 @@ pipeline {
         stage('ECR login and Push Docker Image') {
             steps {
                 script {
-                    withAWS(credentials: 'aws_creds', region: "${AWS_REGION}") {
+                    withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
                         sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
                         sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
 
