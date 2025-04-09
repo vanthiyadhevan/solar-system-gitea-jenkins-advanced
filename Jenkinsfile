@@ -10,7 +10,8 @@ pipeline {
         MONGO_DB_CREDS = credentials('mongo-db-credentials')
         MONGO_USERNAME = credentials('mongo-db-username')
         MONGO_PASSWORD = credentials('mongo-db-password')
-        AWS_CRDS = credentials('aws_creds')
+        // AWS_CRDS = credentials('aws_creds')
+        AWS_CRDS = 'aws_creds'
         AWS_REGION = credentials('aws_region')
         ECR_REPO_NAME = credentials('ecr_repo_name')
         ECR_REPO_URI = credentials('ecr_repo_uri')
@@ -167,7 +168,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                     docker.withRegistry("${ECR_REPO_URI}", "${AWS_CRDS}") {
+                     docker.withRegistry("${ECR_REPO_URI}", "${env.AWS_CRDS}") {
                         dockerImage.push("${BUILD_NUMBER}")
                         dockerImage.push('latest')
                     }
