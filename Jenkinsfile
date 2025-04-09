@@ -10,8 +10,8 @@ pipeline {
         MONGO_DB_CREDS = credentials('mongo-db-credentials')
         MONGO_USERNAME = credentials('mongo-db-username')
         MONGO_PASSWORD = credentials('mongo-db-password')
-        // AWS_CRDS = credentials('aws_creds')
-        AWS_CRDS = 'aws_creds'
+        AWS_CRDS = credentials('aws_creds')
+        // AWS_CRDS = 'aws_creds'
         AWS_REGION = credentials('aws_region')
         ECR_REPO_NAME = credentials('ecr_repo_name')
         ECR_REPO_URI = credentials('ecr_repo_uri')
@@ -153,28 +153,33 @@ pipeline {
             }
         } 
 
-        // stage('ECR login and Push Docker Image') {
-        //     steps {
-        //         script {
-        //             withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
-        //                 sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
-        //                 sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
-
-        //             }
-        //             // sh "docker tag ${ECR_REPO_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}"
-        //         }
-        //     }
-        // }
-        stage('Push Docker Image') {
+        stage('ECR login and Push Docker Image') {
             steps {
                 script {
-                     docker.withRegistry("${ECR_REPO_URI}", "${env.AWS_CRDS}") {
-                        dockerImage.push("${BUILD_NUMBER}")
-                        dockerImage.push('latest')
+                    // withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
+                    //     sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
+                    //     sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
+
+                    // }
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
+                        sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
                     }
+                    // sh "docker tag ${ECR_REPO_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}"
                 }
             }
         }
+
+        // stage('Push Docker Image') {
+        //     steps {
+        //         script {
+        //              docker.withRegistry("${ECR_REPO_URI}", "${env.AWS_CRDS}") {
+        //                 dockerImage.push("${BUILD_NUMBER}")
+        //                 dockerImage.push('latest')
+        //             }
+        //         }
+        //     }
+        // }
 
         // stage('Push Docker Image') {
         //     steps {
