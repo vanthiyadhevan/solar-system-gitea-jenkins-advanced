@@ -152,28 +152,28 @@ pipeline {
             }
         } 
 
-        stage('ECR login and Push Docker Image') {
-            steps {
-                script {
-                    withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
-                        sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
-                        sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
-
-                    }
-                    // sh "docker tag ${ECR_REPO_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}"
-                }
-            }
-        }
-        // stage('Push Docker Image') {
+        // stage('ECR login and Push Docker Image') {
         //     steps {
         //         script {
-        //              docker.withRegistry("${ECR_REPO_URI}", "${AWS_CRDS}") {
-        //                 dockerImage.push("${BUILD_NUMBER}")
-        //                 dockerImage.push('latest')
+        //             withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
+        //                 sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
+        //                 sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
+
         //             }
+        //             // sh "docker tag ${ECR_REPO_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}"
         //         }
         //     }
         // }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                     docker.withRegistry("${ECR_REPO_URI}", "${AWS_CRDS}") {
+                        dockerImage.push("${BUILD_NUMBER}")
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
 
         // stage('Push Docker Image') {
         //     steps {
