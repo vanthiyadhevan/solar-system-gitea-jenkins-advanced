@@ -19,7 +19,7 @@ pipeline {
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-610';
 
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
-        CHART_PATH = 'helm/solarcharts'
+        CHART_PATH = 'helm/nginx/'
         STAGING_NAMESPACE = 'staging'
         PROD_NAMESPACE = 'prod'
 
