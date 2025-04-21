@@ -13,6 +13,7 @@ pipeline {
         AWS_CRDS = credentials('aws_creds')
         // AWS_CRDS = 'aws_creds'
         AWS_REGION = credentials('aws_region')
+        CLUSTER_NAME = credentials('clustername')
         ECR_REPO_NAME = credentials('ecr_repo_name')
         ECR_REPO_URI = credentials('ecr_repo_uri')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-610';
@@ -91,20 +92,6 @@ pipeline {
             }
         } 
 
-        // stage('Build Docker Image') {
-        //     steps {
-        //         sh  'printenv'
-        //         sh  'docker build -t vanthiyadevan/solar-system:$GIT_COMMIT .'
-        //     }
-        // }
-
-        // stage('Build App image') {
-        //     steps {
-        //         script {
-        //             dockerImage = docker.build("${env.ECR_REPO_URI}:${BUILD_NUMBER}", ".") 
-        //         }
-        //     }
-        // }
         stage('Docker Build') {
             steps {
                 script {
@@ -156,11 +143,6 @@ pipeline {
         stage('ECR login and Push Docker Image') {
             steps {
                 script {
-                    // withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
-                    //     sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
-                    //     sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
-
-                    // }
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
                         sh "docker push ${ECR_REPO_URI}:${BUILD_NUMBER}"
@@ -170,24 +152,16 @@ pipeline {
             }
         }
 
-        // stage('Push Docker Image') {
-        //     steps {
-        //         script {
-        //              docker.withRegistry("${ECR_REPO_URI}", "${env.AWS_CRDS}") {
-        //                 dockerImage.push("${BUILD_NUMBER}")
-        //                 dockerImage.push('latest')
-        //             }
-        //         }
-        //     }
-        // }
-
-        // stage('Push Docker Image') {
-        //     steps {
-        //         withDockerRegistry(credentialsId: 'docker-hub-credentials', url: "") {
-        //             sh  'docker push vanthiyadevan/solar-system:$GIT_COMMIT'
-        //         }
-        //     }
-        // }
+        stage('kube config creation') {
+            steps{
+                script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]){
+                        sh 'aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}'
+                        sh 'cat ~/.kube/config'
+                    }
+                }
+            }
+        }
 
         stage('K8S - Update Image Tag') {
             when {
@@ -275,20 +249,34 @@ pipeline {
                 branch 'staging'
             }
             steps {
-                withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
-                    sh  '''
-                        ls -ltr
-                        mkdir reports-$BUILD_ID
-                        cp -rf coverage/ reports-$BUILD_ID/
-                        cp dependency*.* test-results.xml trivy*.* zap*.* reports-$BUILD_ID/
-                        ls -ltr reports-$BUILD_ID/
-                    '''
-                    s3Upload(
-                        file:"reports-$BUILD_ID", 
-                        bucket:'staging-test-reports', 
-                        path:"jenkins-$BUILD_ID/"
-                    )
-                }
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh  '''
+                            ls -ltr
+                            mkdir reports-$BUILD_ID
+                            cp -rf coverage/ reports-$BUILD_ID/
+                            cp dependency*.* test-results.xml trivy*.* zap*.* reports-$BUILD_ID/
+                            ls -ltr reports-$BUILD_ID/
+                        '''
+                        s3Upload(
+                            file:"reports-$BUILD_ID", 
+                            bucket:'staging-test-reports', 
+                            path:"jenkins-$BUILD_ID/"
+                        )
+                    }
+                // withAWS(credentials: "${AWS_CRDS}", region: "${AWS_REGION}") {
+                //     sh  '''
+                //         ls -ltr
+                //         mkdir reports-$BUILD_ID
+                //         cp -rf coverage/ reports-$BUILD_ID/
+                //         cp dependency*.* test-results.xml trivy*.* zap*.* reports-$BUILD_ID/
+                //         ls -ltr reports-$BUILD_ID/
+                //     '''
+                //     s3Upload(
+                //         file:"reports-$BUILD_ID", 
+                //         bucket:'staging-test-reports', 
+                //         path:"jenkins-$BUILD_ID/"
+                //     )
+                // }
             }
         } 
 
