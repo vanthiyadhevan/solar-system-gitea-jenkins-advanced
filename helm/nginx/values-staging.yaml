@@ -1,0 +1,19 @@
+replicaCount: 1
+
+image:
+  tag: latest
+
+ingress:
+  enabled: true
+  ingressClassName: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: nginx-bitnami
+  path: /
+  pathType: Prefix
+  tls: false
+
+service:
+  type: ClusterIP
+  port: 80

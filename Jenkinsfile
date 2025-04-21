@@ -17,6 +17,13 @@ pipeline {
         ECR_REPO_NAME = credentials('ecr_repo_name')
         ECR_REPO_URI = credentials('ecr_repo_uri')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-610';
+
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+        CHART_PATH = 'helm/solarcharts'
+        STAGING_NAMESPACE = 'staging'
+        PROD_NAMESPACE = 'prod'
+
+        GITHUB_TOKEN = credentials('github')
     }
 
     options {
@@ -163,30 +170,44 @@ pipeline {
             }
         }
 
-        stage('K8S - Update Image Tag') {
-            when {
-                branch 'staging'
-            }
+        stage('Deploy to Staging Helm') {
             steps {
-                sh 'git clone -b main http://64.227.187.25:5555/dasher-org/solar-system-gitops-argocd'
-                dir("solar-system-gitops-argocd/kubernetes") {
-                    sh '''
-                        #### Replace Docker Tag ####
-                        git checkout main
-                        git checkout -b feature-$BUILD_ID
-                        sed -i "s#siddharth67.*#siddharth67/solar-system:$GIT_COMMIT#g" deployment.yml
-                        cat deployment.yml
-                        
-                        #### Commit and Push to Feature Branch ####
-                        git config --global user.email "jenkins@dasher.com"
-                        git remote set-url origin http://$GITEA_TOKEN@64.227.187.25:5555/dasher-org/solar-system-gitops-argocd
-                        git add .
-                        git commit -am "Updated docker image"
-                        git push -u origin feature-$BUILD_ID
-                    '''
-                }
+                sh 'pwd'
+                sh '''
+                  echo "Deploying to STAGING namespace..."
+                  helm upgrade --install solarapp ${CHART_PATH} \
+                    --namespace ${STAGING_NAMESPACE} \
+                    --create-namespace \
+                    --values ${CHART_PATH}/values-staging.yaml \
+                    --kubeconfig ${KUBECONFIG}
+                '''
             }
         }
+
+        // stage('K8S - Update Image Tag') {
+        //     when {
+        //         branch 'staging'
+        //     }
+        //     steps {
+        //         sh 'git clone -b main http://64.227.187.25:5555/dasher-org/solar-system-gitops-argocd'
+        //         dir("solar-system-gitops-argocd/kubernetes") {
+        //             sh '''
+        //                 #### Replace Docker Tag ####
+        //                 git checkout main
+        //                 git checkout -b feature-$BUILD_ID
+        //                 sed -i "s#siddharth67.*#siddharth67/solar-system:$GIT_COMMIT#g" deployment.yml
+        //                 cat deployment.yml
+                        
+        //                 #### Commit and Push to Feature Branch ####
+        //                 git config --global user.email "jenkins@dasher.com"
+        //                 git remote set-url origin http://$GITEA_TOKEN@64.227.187.25:5555/dasher-org/solar-system-gitops-argocd
+        //                 git add .
+        //                 git commit -am "Updated docker image"
+        //                 git push -u origin feature-$BUILD_ID
+        //             '''
+        //         }
+        //     }
+        // }
 
         stage('K8S - Raise PR') {
             when {
@@ -195,9 +216,9 @@ pipeline {
             steps {
                 sh """
                     curl -X 'POST' \
-                        'http://64.227.187.25:5555/api/v1/repos/dasher-org/solar-system-gitops-argocd/pulls' \
+                        'https://github.com/vanthiyadhevan/project_infra.git' \
                         -H 'accept: application/json' \
-                        -H 'Authorization: token $GITEA_TOKEN' \
+                        -H 'Authorization: token $GITHUB_TOKEN' \
                         -H 'Content-Type: application/json' \
                         -d '{
                             "assignee": "gitea-admin",
@@ -224,25 +245,25 @@ pipeline {
             }
         }
 
-        stage('DAST - OWASP ZAP') {
-            when {
-                branch 'staging'
-            }
-            steps {
-                sh '''
-                    #### REPLACE below with Kubernetes http://IP_Address:30000/api-docs/ #####
-                    chmod 777 $(pwd)
-                    docker run -v $(pwd):/zap/wrk/:rw  ghcr.io/zaproxy/zaproxy zap-api-scan.py \
-                    -t http://134.209.155.222:30000/api-docs/ \
-                    -f openapi \
-                    -r zap_report.html \
-                    -w zap_report.md \
-                    -J zap_json_report.json \
-                    -x zap_xml_report.xml \
-                    -c zap_ignore_rules
-                '''
-            }
-        }
+        // stage('DAST - OWASP ZAP') {
+        //     when {
+        //         branch 'staging'
+        //     }
+        //     steps {
+        //         sh '''
+        //             #### REPLACE below with Kubernetes http://IP_Address:30000/api-docs/ #####
+        //             chmod 777 $(pwd)
+        //             docker run -v $(pwd):/zap/wrk/:rw  ghcr.io/zaproxy/zaproxy zap-api-scan.py \
+        //             -t http://134.209.155.222:30000/api-docs/ \
+        //             -f openapi \
+        //             -r zap_report.html \
+        //             -w zap_report.md \
+        //             -J zap_json_report.json \
+        //             -x zap_xml_report.xml \
+        //             -c zap_ignore_rules
+        //         '''
+        //     }
+        // }
 
         stage('Upload - AWS S3') {
             when {
