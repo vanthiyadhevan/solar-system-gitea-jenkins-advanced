@@ -173,14 +173,21 @@ pipeline {
         stage('Deploy to Staging Helm') {
             steps {
                 sh 'pwd'
+                sh 'helm repo add bitnami https://charts.bitnami.com/bitnami'
+                // sh '''
+                //   echo "Deploying to STAGING namespace..."
+                //   helm upgrade --install solarapp ${CHART_PATH} \
+                //     --namespace ${STAGING_NAMESPACE} \
+                //     --create-namespace \
+                //     --values ${CHART_PATH}/values-staging.yaml \
+                //     --kubeconfig ${KUBECONFIG}
+                // '''
                 sh '''
-                  echo "Deploying to STAGING namespace..."
-                  helm upgrade --install solarapp ${CHART_PATH} \
-                    --namespace ${STAGING_NAMESPACE} \
+                    helm upgrade --install nginx-staging bitnami/nginx \
+                    --namespace staging \
                     --create-namespace \
-                    --values ${CHART_PATH}/values-staging.yaml \
-                    --kubeconfig ${KUBECONFIG}
-                '''
+                    -f ${CHART_PATH}/values-staging.yaml
+                   '''
             }
         }
 
