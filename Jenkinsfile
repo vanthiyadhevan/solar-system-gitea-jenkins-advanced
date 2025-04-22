@@ -181,13 +181,13 @@ pipeline {
                 //     --create-namespace \
                 //     --values ${CHART_PATH}/values-staging.yaml \
                 //     --kubeconfig ${KUBECONFIG}
+                //     --set image.tag=${BUILD_NUMBER}
                 // '''
                 sh '''
                     helm upgrade --install nginx-staging bitnami/nginx \
                     --namespace staging \
                     --create-namespace \
                     -f ${CHART_PATH}/values-staging.yaml 
-                    // --set image.tag=${BUILD_NUMBER}
                    '''
             }
         }
