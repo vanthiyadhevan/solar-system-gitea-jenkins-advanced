@@ -1,19 +1,14 @@
+name: nginx
+app: nginx
+
 replicaCount: 3
 
 image:
-  tag: latest
+  repository: nginx
+  tag: "1.25"
 
-ingress:
-  enabled: true
-  ingressClassName: alb
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: nginx-bitnami
-  path: /
-  pathType: Prefix
-  tls: false
+containerPort: 80
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
   port: 80
