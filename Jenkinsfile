@@ -186,7 +186,8 @@ pipeline {
                     helm upgrade --install nginx-staging bitnami/nginx \
                     --namespace staging \
                     --create-namespace \
-                    -f ${CHART_PATH}/values-staging.yaml
+                    -f ${CHART_PATH}/values-staging.yaml \
+                    --set image.tag=${BUILD_NUMBER}
                    '''
             }
         }
