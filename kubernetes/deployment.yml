@@ -1,0 +1,40 @@
+# Solar App Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar
+  labels:
+    app: solar
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: solar
+  template:
+    metadata:
+      labels:
+        app: solar
+  stragtegy: {}
+    spec:
+      containers:
+        - name: solar-app
+          image: vanthiyadevan/solar_app:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: uri
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: user
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: pass
