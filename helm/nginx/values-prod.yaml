@@ -4,8 +4,8 @@ app: nginx
 replicaCount: 3
 
 image:
-  repository: nginx
-  tag: "1.25"
+  repository: bitnami/nginx
+  tag: "latest"
 
 containerPort: 80
 

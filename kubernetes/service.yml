@@ -1,0 +1,16 @@
+# Solar App Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: solar-svc
+  labels:
+    app: solar
+spec:
+  type: NodePort
+  selector:
+    app: solar
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      nodePort: 30001

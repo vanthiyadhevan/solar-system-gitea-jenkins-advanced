@@ -1,0 +1,125 @@
+# This is a Kubernetes Secret manifest template for Helm.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  labels:
+    app: solar-db
+type: Opaque
+data:
+  uri: bW9uZ29kYitzcnY6Ly9zdXBlcmNsdXN0ZXIuZDgzamoubW9uZ29kYi5uZXQvc3VwZXJEYXRh
+  user: c3VwZXJ1c2Vy
+  pass: U3VwZXJQYXNzd29yZA==
+---
+# MongoDB Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  labels:
+    app: solar-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: solar-db
+  template:
+    metadata:
+      labels:
+        app: solar-db
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:4.4
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: user
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: pass
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: mongo-data
+          emptyDir: {}
+
+---
+# MongoDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-svc
+  labels:
+    app: solar-db
+spec:
+  selector:
+    app: solar-db
+  ports:
+    - port: 27017
+      targetPort: 27017
+
+---
+# Solar App Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar
+  labels:
+    app: solar
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: solar
+  template:
+    metadata:
+      labels:
+        app: solar
+    spec:
+      containers:
+        - name: solar-app
+          image: vanthiyadevan/solar_app:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: uri
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: user
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: pass
+
+---
+# Solar App Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: solar-svc
+  labels:
+    app: solar
+spec:
+  type: NodePort
+  selector:
+    app: solar
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      nodePort: 30001

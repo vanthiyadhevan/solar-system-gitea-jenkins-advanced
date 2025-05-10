@@ -1,14 +1,16 @@
-name: nginx
-app: nginx
+# meta of application
+name: solarapp-staging
+app: solarapp-staging
 
-replicaCount: 2
 
-image:
-  repository: bitnami/nginx
-  tag: "latest"
+# image and container
+image: solarapp
+tag: latest
+imagePullPolicy: Always
+containerPort: 3000
 
-containerPort: 80
 
-service:
-  type: LoadBalancer
-  port: 80
+
+
+  
+
